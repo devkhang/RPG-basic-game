@@ -1,10 +1,12 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
 public class player : entity
 {
+    public Collider2D collider1 = null;
+    private bool isOnOneWayPlatform;
     [Header("Attack details")]
     public Vector2[] attackMovement;
     public float counterAttackDuration = .2f;
@@ -16,9 +18,9 @@ public class player : entity
     [Header("dash info")]
     public float dashDuration;
     public float dashSpeed;
-    [SerializeField] private float dashCoolDown;
-    private float dashUsageTimer = 1;
     public float dashDir { get; private set; }
+
+    public SkillManager skill;
 
 #region state
     public playerStateMachine stateMachine { get; private set; }
@@ -31,8 +33,10 @@ public class player : entity
     public PlayerDashState dashState { get; private set; }
     public playerWallSlideState WallSlideState { get; private set; }   
     public playerWallJumpState wallJumpState { get; private set; } 
-
     public playerPrimaryAttackState playerPrimaryAttack { get; private set; }
+    public playerCounterAttack playerCounterAttack { get; private set; }
+    public playerAimState playerAimState { get; private set; }
+    public playerCatchSwordState playerCatchSword { get; private set; }
     // Start is called before the first frame update
 
     #endregion state
@@ -48,11 +52,43 @@ public class player : entity
         WallSlideState = new playerWallSlideState(stateMachine, this, "Slide");
         wallJumpState = new playerWallJumpState(stateMachine, this, "Jump");
         playerPrimaryAttack = new playerPrimaryAttackState(stateMachine, this, "Attack");
+        playerCounterAttack = new playerCounterAttack(stateMachine, this, "counterAttack");
+        playerAimState = new playerAimState(stateMachine, this, "AimSword");
+        playerCatchSword = new playerCatchSwordState(stateMachine, this, "CatchSword");
     }
 
+    public bool IsOnOneWayPlatform()
+    {
+        return isOnOneWayPlatform;
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("OneWayPlatform"))
+        {
+            isOnOneWayPlatform = true;
+            collider1 = collision.gameObject.GetComponent<Collider2D>();
+        }
+        else
+        {
+            isOnOneWayPlatform = false;
+            collider1 = collision.gameObject.GetComponent<Collider2D>();
+            // Không phải One-Way Platform
+        }
+    }
+
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("OneWayPlatform"))
+        {
+            isOnOneWayPlatform = false;
+            collider1 = null;
+        }
+    }
     protected override void Start()
     {
         base.Start();
+        skill = SkillManager.Instance;
         stateMachine.init(ldieState);
     }
     // Update is called once per frame
@@ -70,15 +106,14 @@ public class player : entity
     }
     public void checkDashAbility()
     {
-        dashUsageTimer -= Time.deltaTime;
+        
         if(IsWallDetected())
         {
             return;
         }
 
-        if (Input.GetKeyDown(KeyCode.LeftShift)&&dashUsageTimer<0)
+        if (Input.GetKeyDown(KeyCode.LeftShift)&&SkillManager.Instance.Dash_Skill.CanUseSkill())
         {
-            dashUsageTimer = dashCoolDown;
             dashDir = Input.GetAxisRaw("Horizontal");
             if(dashDir == 0)
             {

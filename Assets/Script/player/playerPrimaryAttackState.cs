@@ -15,6 +15,7 @@ public class playerPrimaryAttackState : playerState
     public override void enter()
     {
         base.enter();
+
         if(comboCounter > 2||Time.time > lastTimeAttack + comboWindowTime)
         {
             comboCounter = 0;
@@ -44,7 +45,7 @@ public class playerPrimaryAttackState : playerState
         base.Update();
         if(stateTimer < 0)
         {
-            player.zeroVector();
+            player.SetZeroVelocity();
         }
 
         if (triggerCall)

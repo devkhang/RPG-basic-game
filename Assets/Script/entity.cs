@@ -4,7 +4,14 @@ using UnityEngine;
 
 public class entity : MonoBehaviour
 {
+    [Header("knockback info")]
+
+    public Vector2 knockBackDirection;
+    public float knockBackDuration;
+    private bool isKnockBack;
     [Header("collision info")]
+    public Transform attackCheck;
+    public float attackCheckRadius;
     [SerializeField] protected Transform GroundCheck;
     [SerializeField] protected float GroundCheckDistance;
     [SerializeField] protected Transform wallCheck;
@@ -14,8 +21,9 @@ public class entity : MonoBehaviour
     // Start is called before the first frame update
 
     #region component
-    public Animator anim;
-    public Rigidbody2D rb;
+    public Animator anim {  get; private set; }
+    public Rigidbody2D rb {  get; private set; }
+    public EntityFx fx { get; private set; }
     #endregion componet
 
     public int facingDir { get; private set; } = 1;
@@ -26,6 +34,7 @@ public class entity : MonoBehaviour
     }
     protected virtual void Start()
     {
+        fx = GetComponent<EntityFx>();
         anim = GetComponentInChildren<Animator>();
         rb = GetComponent<Rigidbody2D>();
     }
@@ -35,13 +44,31 @@ public class entity : MonoBehaviour
     {
         
     }
+    public virtual void Damage()
+    {
+        fx.StartCoroutine("FlashFX");
+        StartCoroutine("knockBackExecute");
+    }
+    protected IEnumerator knockBackExecute()
+    {
+        isKnockBack = true;
+        rb.velocity = new Vector2(knockBackDirection.x * -facingDir, knockBackDirection.y);
+        yield return new WaitForSeconds(knockBackDuration); 
+        isKnockBack = false;
+    }
     #region Velocity
     public void SetVelocity(float velocity_x, float velocity_y)
     {
+        if(isKnockBack)
+            return;
         rb.velocity = new Vector2(velocity_x, velocity_y);
         FlipControl(velocity_x);
     }
-    public void zeroVector() => rb.velocity = Vector2.zero;
+    public void SetZeroVelocity()
+    {
+        if (isKnockBack) return;
+        rb.velocity = new Vector2(0, 0);
+    }
     #endregion
     #region collision
     public virtual bool IsGroundDetected() => Physics2D.Raycast(GroundCheck.position, Vector2.down, GroundCheckDistance, whatIsGround);
@@ -50,6 +77,7 @@ public class entity : MonoBehaviour
     {
         Gizmos.DrawLine(GroundCheck.position, new Vector3(GroundCheck.position.x, GroundCheck.position.y - GroundCheckDistance));
         Gizmos.DrawLine(wallCheck.position, new Vector3(wallCheck.position.x + wallCheckDistance * facingDir, wallCheck.position.y));
+        Gizmos.DrawWireSphere(attackCheck.position, attackCheckRadius);
     }
     #endregion
     #region flipControl

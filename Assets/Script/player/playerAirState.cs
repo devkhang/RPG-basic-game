@@ -22,10 +22,15 @@ public class playerAirState : playerState
     public override void Update()
     {
         base.Update();
-
-        if (player.IsWallDetected())
+        try
         {
-            stateMachine.changeState(player.WallSlideState);
+            if (player.IsWallDetected() && !player.collider1.IsTouching(player.GetComponent<Collider2D>()))
+            {
+                stateMachine.changeState(player.WallSlideState);
+            }
+        }catch(System.Exception e)
+        {
+            Debug.Log("nothing");
         }
 
         if (player.IsGroundDetected())

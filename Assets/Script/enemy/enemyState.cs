@@ -7,6 +7,7 @@ public class enemyState
     // Start is called before the first frame update
     public enemy enemyBase;
     public enemyStateMachine stateMachine;
+    protected Rigidbody2D rb;
 
     protected bool triggerCalled;
     private string AnimBoolName;
@@ -27,6 +28,7 @@ public class enemyState
     {
         triggerCalled = false;
         enemyBase.anim.SetBool(AnimBoolName,true);
+        rb = enemyBase.rb;
     }
     public virtual void Exit()
     {
@@ -35,5 +37,9 @@ public class enemyState
     public virtual void Update()
     {
         stateTimer -= Time.deltaTime;
+    }
+    public virtual void AnimationFinishTrigeer()
+    {
+        triggerCalled=true;
     }
 }
