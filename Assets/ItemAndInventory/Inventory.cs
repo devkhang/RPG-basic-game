@@ -11,11 +11,16 @@ public class Inventory :MonoBehaviour
 
     public List<InventoryItem> Stash;
     public Dictionary<ItemData, InventoryItem> StashDictionary;
+
+    public List <InventoryItem> Equipment;
+    public Dictionary<ItemData_Equipment, InventoryItem> EquipmentDictionary;
     [Header("Inventory UI")]
     [SerializeField] private Transform InventorySlotParent;
     [SerializeField] private Transform StashSlotParent;
+    [SerializeField] private Transform EquipmentSlotParent;
     private UI_itemSlot[] InventoryItemSlots;
     private UI_itemSlot[] StashItemSlots;
+    private UI_EquipmentSlot[] EquipmentItemSlots;
     private void Awake()
     {
         if(Instance == null)
@@ -31,11 +36,65 @@ public class Inventory :MonoBehaviour
         Stash = new List<InventoryItem>();
         StashDictionary = new Dictionary<ItemData, InventoryItem>();
 
+        Equipment = new List<InventoryItem>();
+        EquipmentDictionary = new Dictionary<ItemData_Equipment, InventoryItem>();
+
         InventoryItemSlots = InventorySlotParent.GetComponentsInChildren<UI_itemSlot>();
         StashItemSlots = StashSlotParent.GetComponentsInChildren<UI_itemSlot>();
+        EquipmentItemSlots = EquipmentSlotParent.GetComponentsInChildren<UI_EquipmentSlot>();
     }
+    public void EquipItem(ItemData _item)
+    {
+        ItemData_Equipment new_Equipment = _item as ItemData_Equipment;
+        InventoryItem new_Item = new InventoryItem(new_Equipment);
+        ItemData_Equipment ItemToDelete = null;
+        foreach (KeyValuePair<ItemData_Equipment, InventoryItem> item in EquipmentDictionary)
+        {
+            if (item.Key.EquipmentType == new_Equipment.EquipmentType)
+            {
+                ItemToDelete = item.Key;
+            }
+        }
+        if (ItemToDelete != null) { 
+            UnEquipItem(ItemToDelete);
+            AddItem(ItemToDelete);
+        }
+        Equipment.Add(new_Item);
+        EquipmentDictionary.Add(new_Equipment, new_Item);
+        RemoveItem(_item);
+        UpdateSlotUI();
+    }
+
+    private void UnEquipItem(ItemData_Equipment new_Equipment)
+    {
+        if (EquipmentDictionary.TryGetValue(new_Equipment, out InventoryItem value))
+        {
+            EquipmentDictionary.Remove(new_Equipment);
+            Equipment.Remove(value);
+        }
+    }
+
     private void UpdateSlotUI()
     {
+        for(int i = 0;i < EquipmentItemSlots.Length; i++)
+        {
+            foreach (KeyValuePair<ItemData_Equipment, InventoryItem> item in EquipmentDictionary)
+            {
+                if (item.Key.EquipmentType == EquipmentItemSlots[i].SlotType)
+                {
+                    EquipmentItemSlots[i].updateSlot(item.Value);
+                }
+            }
+        }
+
+        for(int i = 0; i < InventoryItemSlots.Length; i++)
+        {
+            InventoryItemSlots[i].ClearUpSlot();
+        }
+        for(int i = 0; i<StashItemSlots.Length; i++)
+        {
+            StashItemSlots[i].ClearUpSlot();
+        }
         for(int i = 0; i < InventoryItems.Count; i++)
         {
             InventoryItemSlots[i].updateSlot(InventoryItems[i]);
@@ -97,7 +156,7 @@ public class Inventory :MonoBehaviour
     {
         if (InventoryDictionary.TryGetValue(new_Item, out InventoryItem value))
         {
-            if(value.stacksize <= 0)
+            if(value.stacksize <= 1)
             {
                 InventoryDictionary.Remove(new_Item);
                 InventoryItems.Remove(value);
@@ -109,7 +168,7 @@ public class Inventory :MonoBehaviour
         }
         if (StashDictionary.TryGetValue(new_Item, out InventoryItem StashValue))
         {
-            if (StashValue.stacksize <= 0)
+            if (StashValue.stacksize <= 1)
             {
                 StashDictionary.Remove(new_Item);
                 Stash.Remove(StashValue);

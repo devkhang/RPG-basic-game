@@ -223,7 +223,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f180b28f874a4d4a940a81991c8d350, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Image: {fileID: 7318305329298943527}
+  itemImage: {fileID: 7318305329298943527}
   TextMeshPro: {fileID: 1688606769123296176}
   Item:
     ItemData: {fileID: 11400000, guid: 6ba4b5a01ffbc934099556032e04ec7f, type: 2}
