@@ -6,11 +6,11 @@ public class animationTrigger : MonoBehaviour
 {
     // Start is called before the first frame update
     player player => GetComponentInParent<player>();
-    public void AnimationTrigger()
+    private void AnimationTrigger()
     {
         player.AnimationTrigger();
     }
-    public void AttackTrigger()
+    private void AttackTrigger()
     {
         Collider2D[] hits = Physics2D.OverlapCircleAll(player.attackCheck.position,player.attackCheckRadius);
         foreach (Collider2D hit in hits)
@@ -20,5 +20,9 @@ public class animationTrigger : MonoBehaviour
                 hit.GetComponent<enemy>().Damage();
             }
         }
+    }
+    private void ThrowSword()
+    {
+        SkillManager.Instance.Sword_Skill.CreateSword();
     }
 }

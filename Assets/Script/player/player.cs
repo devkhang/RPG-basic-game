@@ -14,6 +14,7 @@ public class player : entity
     [Header("move info")]
     public float movespeed = 8f;
     public float jumpForce = 12f;
+    public float SwordReturningImpact;
 
     [Header("dash info")]
     public float dashDuration;
@@ -21,6 +22,7 @@ public class player : entity
     public float dashDir { get; private set; }
 
     public SkillManager skill;
+    public GameObject sword {  get; private set; }
 
 #region state
     public playerStateMachine stateMachine { get; private set; }
@@ -103,6 +105,12 @@ public class player : entity
         IsBusy = true;
         yield return new WaitForSeconds(_second);
         IsBusy = false;
+    }
+    public void assignSword(GameObject _newSword) => sword = _newSword;
+    public void CatchSword()
+    {
+        stateMachine.changeState(playerCatchSword);
+        Destroy(sword);
     }
     public void checkDashAbility()
     {
